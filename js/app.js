@@ -1,3 +1,8 @@
+/* Always open at the top: browsers otherwise restore the old scroll position on reload,
+   which lands on parts of the chat that haven't played yet (a blank screen). */
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+if (!location.hash) scrollTo(0, 0);
+
 /* ---------- helpers ---------- */
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -68,6 +73,19 @@ const RENDER = {
     <div class="links">${PROFILE.links.map(l => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("")}</div></div>`
 };
 
+/* Keep every skill group to two lines max: step the tag size down until it fits. */
+function fitSkills(){
+  document.querySelectorAll(".skillrow .tags").forEach(box => {
+    let fs = 12;
+    box.style.setProperty("--tag-fs", fs + "px");
+    const lines = () => new Set([...box.children].map(t => t.offsetTop)).size;
+    while (lines() > 2 && fs > 9){ fs -= 0.5; box.style.setProperty("--tag-fs", fs + "px"); }
+  });
+}
+let fitTimer;
+addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitSkills, 120); });
+document.fonts?.ready.then(fitSkills);
+
 /* ---------- build the thread ---------- */
 const thread = document.getElementById("thread");
 const staged = !reduce && "IntersectionObserver" in window;
@@ -87,6 +105,7 @@ function buildTurn(ask, bodyHTML, opts = {}){
 
 const scripted = SCRIPT.map(s => { const t = buildTurn(s.ask, RENDER[s.id]()); t.id = s.id; thread.appendChild(t); return t; });
 syncJobs();
+fitSkills();
 const sep = document.createElement("div"); sep.className = "live-sep"; sep.textContent = "you're all caught up. ask me anything"; thread.appendChild(sep);
 const live = document.createElement("div"); live.id = "live"; thread.appendChild(live);
 
@@ -130,6 +149,7 @@ function resetComposer(){
   if (autotyping){ q.value = ""; box.classList.remove("auto"); autotyping = false; sendBtn.disabled = true; }
 }
 function flushAll(){
+  heroSkipped = true;
   gen++;
   queue.length = 0;
   allTurns.forEach(t => { if (t._state !== "done") finish(t); });
@@ -145,7 +165,7 @@ function enqueue(t){
 }
 async function run(){
   if (running) return; running = true;
-  if (!run._warmed){ run._warmed = true; await sleep(TIMING.warmup); }
+  if (!run._warmed){ run._warmed = true; await heroDone; await sleep(TIMING.warmup); }
   while (queue.length){
     const t = queue.shift();
     await playAsk(t, queue.length > 1 ? TIMING.backlog : 1);
@@ -209,6 +229,50 @@ async function playAnswer(t){
 
 scripted.forEach(t => { t._gate = true; allTurns.push(t); const p = t.querySelector("[data-stream]"); if (p) p._full = p.textContent; });
 
+
+/* ---------- intro: the headline types itself in when the page opens ---------- */
+const HERO = { char: 38, punct: 260, startDelay: 450, afterType: 250 };
+let heroSkipped = false, heroResolve;
+const heroDone = new Promise(r => heroResolve = r);
+
+async function typeHero(){
+  const h1 = document.querySelector(".hero h1");
+  const bits = [...document.querySelectorAll(".hero .lede, .hero .hint")];
+  const reveal = () => document.documentElement.classList.remove("intro");
+  if (!staged || !h1){ reveal(); heroResolve(); return; }
+
+  h1.style.minHeight = h1.offsetHeight + "px";          // reserve the space so nothing jumps while typing
+  const walker = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT);
+  const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n => { n._full = n.nodeValue; n.nodeValue = ""; if (n.parentElement !== h1) n.parentElement.classList.add("untyped"); });
+  bits.forEach(b => b.classList.add("pre"));
+  const caret = document.createElement("span"); caret.className = "type-caret"; caret.setAttribute("aria-hidden", "true");
+  reveal();
+
+  const finish = () => {
+    nodes.forEach(n => { n.nodeValue = n._full; n.parentElement.classList.remove("untyped"); });
+    caret.remove(); h1.style.minHeight = "";
+    bits.forEach(b => b.classList.remove("pre"));
+    heroResolve();
+  };
+
+  await sleep(HERO.startDelay);
+  for (const n of nodes){
+    n.parentElement.classList.remove("untyped");
+    n.after(caret);
+    for (const ch of Array.from(n._full)){           // Array.from keeps the 👋 emoji in one piece
+      if (heroSkipped) return finish();
+      n.nodeValue += ch;
+      await sleep(/[.,]/.test(ch) ? HERO.punct : HERO.char);
+    }
+  }
+  await sleep(HERO.afterType);
+  caret.remove(); h1.style.minHeight = "";
+  for (const b of bits){ b.classList.remove("pre"); await sleep(220); }
+  heroResolve();
+}
+typeHero();
+
 if (staged){
   // phase 1: question types as the turn enters the screen
   const askIO = new IntersectionObserver(es => es.forEach(e => {
@@ -255,6 +319,7 @@ function ask(text, autotype){
   const p = t.querySelector("[data-stream]"); if (p) p._full = p.textContent;
   if (!staged){ live.appendChild(t); finish(t); t.scrollIntoView({ block: "start" }); return; }
   live.appendChild(t);
+  fitSkills();
   enqueue(t);
 }
 
@@ -275,7 +340,7 @@ const rail = document.getElementById("rail");
 SCRIPT.forEach((s, i) => {
   const b = document.createElement("button"); b.type = "button"; b.textContent = s.label; b.dataset.target = s.id;
   b.addEventListener("click", () => {
-    gen++; [...sleepers].forEach(w => w()); resetComposer();
+    heroSkipped = true; gen++; [...sleepers].forEach(w => w()); resetComposer();
     queue.length = 0;
     scripted.forEach((t, k) => {
       if (k <= i){ if (t._state !== "done") finish(t); }

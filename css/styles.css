@@ -86,6 +86,16 @@ main{max-width:var(--col);margin:0 auto;padding-block:32px 220px}
 .hint svg{animation:nudge 1.6s ease-in-out infinite}
 @keyframes nudge{50%{transform:translateY(3px)}}
 
+/* intro typing */
+.intro .hero h1,.intro .hero .lede,.intro .hero .hint{visibility:hidden}
+.hero .pre{opacity:0;transform:translateY(6px)}
+.hero h1 .untyped{padding:0;margin:0;background:none}
+.hero .lede,.hero .hint{transition:opacity .5s ease,transform .5s ease}
+.type-caret{display:inline-block;width:.06em;min-width:2px;height:.9em;margin-left:.04em;vertical-align:-.08em;background:var(--sun);border-radius:1px;animation:caret .9s steps(1) infinite}
+@keyframes caret{50%{opacity:0}}
+.hero > .sun{animation:sunrise .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sunrise{from{opacity:0;transform:translateY(10px) scale(.85)}}
+
 /* ---------- shared bits ---------- */
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .tag{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;white-space:nowrap}
@@ -99,6 +109,9 @@ main{max-width:var(--col);margin:0 auto;padding-block:32px 220px}
 .skills{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:14px}
 .skillrow{display:grid;grid-template-columns:8.5rem minmax(0,1fr);gap:6px 16px;align-items:start}
 .skillrow h3{margin:0;font-family:var(--mono);font-weight:400;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:5px}
+/* skill tags shrink (via --tag-fs, set by fitSkills in app.js) so each group stays within two lines */
+.skillrow .tags{gap:5px}
+.skillrow .tag{font-size:var(--tag-fs,12px);padding:.25em .62em}
 
 /* experience */
 .xp{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
@@ -199,6 +212,9 @@ form.box input::placeholder{color:var(--muted)}
 @media (min-width:1180px){.rail{display:flex}}
 
 @media (max-width:640px){
+  .top{display:none} /* no header on phones: the sun and headline open the page */
+  main{padding-top:max(20px, env(safe-area-inset-top, 0px))}
+  .hero{gap:18px;padding-top:0}
   .proj{grid-template-columns:minmax(0,1fr)}
   .thumb{min-height:11.5rem}
   .t-logo{border-right:0;border-bottom:1px solid var(--line)}
