@@ -90,3 +90,10 @@ const LIVE_INTRO = {
   projects: "Two I'd point you to first.", education: "I studied at Northeastern, mixing computer science with business and fintech.",
   contact: "Email is the fastest way to reach me."
 };
+
+/* Words the sun cycles through while it "thinks" before an answer */
+const THINKING_WORDS = [
+  "Basking", "Brightening", "Soaking up rays", "Warming up", "Glowing", "Radiating",
+  "Beaming", "Sunbathing", "Rising and shining", "Pondering", "Mulling it over",
+  "Brewing", "Percolating", "Noodling", "Daydreaming", "Connecting the dots"
+];

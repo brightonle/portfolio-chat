@@ -59,7 +59,8 @@ main{max-width:var(--col);margin:0 auto;padding-block:32px 220px}
 .rise{transition:opacity .45s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
 .content{position:relative;min-width:0}
 .dots{display:none;position:absolute;top:0;left:0;align-items:center;gap:5px;padding-top:6px}
-.dots span{margin-left:8px;font-family:var(--mono);font-size:12px;color:transparent;background:linear-gradient(90deg,var(--muted) 30%,var(--sun) 50%,var(--muted) 70%) 0 0/300% 100%;-webkit-background-clip:text;background-clip:text;animation:shimmer 2.2s linear infinite}
+.dots span{transition:opacity .2s ease;margin-left:8px;font-family:var(--mono);font-size:12px;color:transparent;background:linear-gradient(90deg,var(--muted) 30%,var(--sun) 50%,var(--muted) 70%) 0 0/300% 100%;-webkit-background-clip:text;background-clip:text;animation:shimmer 2.2s linear infinite}
+.dots span.swap{opacity:0}
 @keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
 .dots i{width:6px;height:6px;border-radius:50%;background:var(--muted);opacity:.45;animation:hop 1s infinite}
 .dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
@@ -81,7 +82,8 @@ main{max-width:var(--col);margin:0 auto;padding-block:32px 220px}
 .hero h1 em{font-style:italic}
 .wave{display:inline-block;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;font-size:.86em;line-height:1;margin:0 -.04em 0 .08em;transform-origin:70% 75%;animation:wave 2.6s ease-in-out 1s infinite}
 @keyframes wave{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%{transform:rotate(-8deg)}40%{transform:rotate(-4deg)}50%{transform:rotate(10deg)}}
-.lede{color:var(--muted);font-size:15.5px;max-width:48ch;margin:0}
+.lede{color:var(--muted);font-size:15.5px;line-height:1.6;max-width:48ch;margin:0}
+.arrow{display:inline-block;width:.7em;height:.7em;vertical-align:.05em;margin-left:.1em}
 .hint{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;font-family:var(--mono)}
 .hint svg{animation:nudge 1.6s ease-in-out infinite}
 @keyframes nudge{50%{transform:translateY(3px)}}
@@ -215,6 +217,7 @@ form.box input::placeholder{color:var(--muted)}
   .top{display:none} /* no header on phones: the sun and headline open the page */
   main{padding-top:max(20px, env(safe-area-inset-top, 0px))}
   .hero{gap:18px;padding-top:0}
+  .lede{max-width:none}
   .proj{grid-template-columns:minmax(0,1fr)}
   .thumb{min-height:11.5rem}
   .t-logo{border-right:0;border-bottom:1px solid var(--line)}

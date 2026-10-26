@@ -24,6 +24,8 @@ function sunSVG(size){
 }
 document.querySelectorAll("[data-sun]").forEach(el => el.outerHTML = sunSVG(+el.dataset.sun));
 
+/* A drawn ↗ arrow. The ↗ character shows up as an emoji on iPhone, so links use this instead. */
+const ARROW = '<svg class="arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 8.5l5-5M4.5 3.5h4v4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const xpList = list => `<ul class="xp">${list.map(x => `
   <li><button class="xp-head" type="button" aria-expanded="true">
     <span class="logo" aria-hidden="true"><span>${esc(x.mono || x.org.slice(0, 1))}</span>${x.logo ? `<img src="${esc(x.logo)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</span>
@@ -57,7 +59,7 @@ const RENDER = {
   projects: intro => `<p>${esc(intro ?? "Two recent ones. Open either for the details.")}</p><div class="projects">${PROFILE.projects.map(p => `
     <article class="proj">${p.logo ? `<div class="thumb t-logo${p.logoTheme === "dark" ? " dark" : ""}"><img src="${esc(p.logo)}" alt="${esc(p.title)} logo"></div>` : THUMBS[p.thumb]}
       <div class="txt"><span class="kicker">${esc(p.kicker)}</span>
-        <h3>${p.href ? `<a href="${esc(p.href)}" target="_blank" rel="noopener">${esc(p.title)} ↗</a>` : esc(p.title)}</h3>
+        <h3>${p.href ? `<a href="${esc(p.href)}" target="_blank" rel="noopener">${esc(p.title)} ${ARROW}</a>` : esc(p.title)}</h3>
         <p>${esc(p.text)}</p>
         <details><summary>How it works</summary><dl>
           <div><dt>What it does</dt><dd>${esc(p.what)}</dd></div>
@@ -70,8 +72,18 @@ const RENDER = {
       <div class="tags">${E.courses.map(c => `<span class="tag">${esc(c)}</span>`).join("")}</div></div></div>`; },
   contact: intro => `<p>${esc(intro ?? "I'm based in Texas and always happy to talk about AI agents, shipping products or fintech. Email is the fastest way to reach me.")}</p>
     <div class="contact"><div class="email-row"><span class="email">${esc(PROFILE.email)}</span><button class="ghost copy" type="button">Copy</button></div>
-    <div class="links">${PROFILE.links.map(l => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("")}</div></div>`
+    <div class="links">${PROFILE.links.map(l => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)} ${ARROW}</a>`).join("")}</div></div>`
 };
+
+/* On phones, keep the description under the headline to two lines by easing its size down if needed. */
+function fitLede(){
+  const el = document.querySelector(".hero .lede"); if (!el) return;
+  el.style.fontSize = "";
+  if (!matchMedia("(max-width: 640px)").matches) return;
+  let fs = parseFloat(getComputedStyle(el).fontSize);
+  const lines = () => Math.round(el.getBoundingClientRect().height / (fs * 1.6));
+  while (lines() > 2 && fs > 12){ fs -= 0.5; el.style.fontSize = fs + "px"; }
+}
 
 /* Keep every skill group to two lines max: step the tag size down until it fits. */
 function fitSkills(){
@@ -83,8 +95,9 @@ function fitSkills(){
   });
 }
 let fitTimer;
-addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitSkills, 120); });
-document.fonts?.ready.then(fitSkills);
+addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => { fitSkills(); fitLede(); }, 120); });
+document.fonts?.ready.then(() => { fitSkills(); fitLede(); });
+fitLede();
 
 /* ---------- build the thread ---------- */
 const thread = document.getElementById("thread");
@@ -95,7 +108,7 @@ function buildTurn(ask, bodyHTML, opts = {}){
   sec.className = "turn" + (staged ? " armed" : "");
   if (opts.id) sec.id = opts.id;
   sec.innerHTML = `<div class="ask">${esc(ask)}</div>
-    <div class="reply"><div class="who">${sunSVG(30)}</div><div class="content"><div class="dots" aria-hidden="true"><i></i><i></i><i></i><span>thinking</span></div><div class="body">${bodyHTML}</div></div></div>`;
+    <div class="reply"><div class="who">${sunSVG(30)}</div><div class="content"><div class="dots" aria-hidden="true"><i></i><i></i><i></i><span class="think-word">Thinking…</span></div><div class="body">${bodyHTML}</div></div></div>`;
   const body = sec.querySelector(".body");
   [...body.children].forEach((c, i) => { if (i === 0) c.dataset.stream = ""; else c.classList.add("rise"); });
   sec._ask = ask;
@@ -135,7 +148,26 @@ let gen = 0, running = false, autotyping = false;
 const queue = [], sleepers = new Set(), allTurns = [];
 const sleep = ms => new Promise(r => { const t = setTimeout(() => { sleepers.delete(w); r(); }, ms); const w = () => { clearTimeout(t); r(); }; sleepers.add(w); });
 
+/* Rotate playful "thinking" words while the sun waits, like Claude does */
+const WORDS = (typeof THINKING_WORDS !== "undefined" && THINKING_WORDS.length) ? THINKING_WORDS : ["Thinking"];
+let lastWord = "";
+function nextWord(){
+  let w; do { w = WORDS[Math.floor(Math.random() * WORDS.length)]; } while (WORDS.length > 1 && w === lastWord);
+  return (lastWord = w) + "…";
+}
+function startThinking(t){
+  const el = t.querySelector(".think-word"); if (!el) return;
+  el.textContent = nextWord();
+  clearInterval(t._thinkTimer);
+  t._thinkTimer = setInterval(() => {
+    el.classList.add("swap");
+    setTimeout(() => { el.textContent = nextWord(); el.classList.remove("swap"); }, 220);
+  }, 1900);
+}
+function stopThinking(t){ clearInterval(t._thinkTimer); t._thinkTimer = null; }
+
 function finish(t){
+  stopThinking(t);
   t.querySelectorAll(".ask,.reply,.rise").forEach(e => e.classList.add("in"));
   t.querySelector(".reply").classList.remove("thinking");
   const p = t.querySelector("[data-stream]");
@@ -196,6 +228,7 @@ async function playAsk(t, speed){
   await sleep(TIMING.afterSend / speed); if (stale()) return finish(t);
 
   reply.classList.add("in", "thinking");
+  startThinking(t);
   t._thinkStart = performance.now();
   t._state = "thinking";
   maybeAnswer(t);
@@ -221,6 +254,7 @@ async function playAnswer(t){
     p.textContent = "";
     words = p._full.split(" ").map((w, i, a) => { const s = document.createElement("span"); s.className = "w"; s.textContent = w + (i < a.length - 1 ? " " : ""); p.appendChild(s); return s; });
   }
+  stopThinking(t);
   reply.classList.remove("thinking");
   for (const w of words){ w.classList.add("on"); await sleep(TIMING.word); if (stale()) return finish(t); }
   for (const r of rises){ r.classList.add("in"); await sleep(TIMING.rise); if (stale()) return finish(t); }
