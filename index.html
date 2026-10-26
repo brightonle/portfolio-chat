@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFFFFF">
   <title>Brighton Le’s Portfolio</title>
   <meta name="description" content="Brighton Le builds AI agents and data systems. A portfolio you can chat with.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -16,12 +17,27 @@
       document.documentElement.classList.add("intro");
       setTimeout(function () { document.documentElement.classList.remove("intro"); }, 4000);
     }
+    /* Night mode: restore the visitor's last choice before the page paints, so it doesn't flash white. */
+    try {
+      if (localStorage.getItem("mode") === "night") {
+        document.documentElement.dataset.mode = "night";
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", "#0D1222");
+      }
+    } catch (e) {}
   </script>
 </head>
 <body>
 <header class="top">
   <a class="brand" href="#hero" aria-label="Back to top"><span data-sun="32"></span><span>Brighton Le’s Portfolio</span></a>
-  <button class="pill" id="getInTouch" type="button">Get in touch</button>
+  <div class="top-actions">
+    <button class="mode-switch" id="modeSwitch" type="button" role="switch" aria-checked="false" aria-label="Night mode">
+      <span class="knob">
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3.4a8.6 8.6 0 1 0 5.4 12.9 7 7 0 0 1-5.4-12.9z"/></svg>
+      </span>
+    </button>
+    <button class="pill" id="getInTouch" type="button">Get in touch</button>
+  </div>
 </header>
 
 <nav class="rail" id="rail" aria-label="Conversation"></nav>

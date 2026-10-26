@@ -7,6 +7,8 @@ if (!location.hash) scrollTo(0, 0);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+const CRESCENT = "M29.80 16.15A16 16 0 1 0 47.42 36.28A13.5 13.5 0 0 1 29.80 16.15Z";
+const sparkle = (x, y, s) => `<path class="star" d="M${x} ${y - s}Q${x} ${y} ${x + s} ${y}Q${x} ${y} ${x} ${y + s}Q${x} ${y} ${x - s} ${y}Q${x} ${y} ${x} ${y - s}Z"/>`;
 function sunSVG(size){
   let long = "", short = "";
   for (let i = 0; i < 12; i++){
@@ -16,11 +18,21 @@ function sunSVG(size){
     if (i % 2) short += l; else long += l;
   }
   return `<svg class="sun" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
-    <g class="rays"><g>${long}</g><g class="short">${short}</g></g>
-    <circle class="core" cx="32" cy="32" r="15.5"/>
-    <circle class="cheek" cx="23.5" cy="35" r="2.6"/><circle class="cheek" cx="40.5" cy="35" r="2.6"/>
-    <g class="eyes"><circle cx="27" cy="30" r="1.9"/><circle cx="37" cy="30" r="1.9"/></g>
-    <path class="smile" d="M27 35.2c2.8 3.2 7.2 3.2 10 0"/></svg>`;
+    <g class="day">
+      <g class="rays"><g>${long}</g><g class="short">${short}</g></g>
+      <circle class="core" cx="32" cy="32" r="15.5"/>
+      <circle class="cheek" cx="23.5" cy="35" r="2.6"/><circle class="cheek" cx="40.5" cy="35" r="2.6"/>
+      <g class="eyes"><circle cx="27" cy="30" r="1.9"/><circle cx="37" cy="30" r="1.9"/></g>
+      <path class="smile" d="M27 35.2c2.8 3.2 7.2 3.2 10 0"/>
+    </g>
+    <g class="night">
+      <g class="stars">${sparkle(50, 12, 4)}${sparkle(57, 44, 2.6)}${sparkle(11, 14, 3)}${sparkle(45, 57, 2.2)}${sparkle(8, 42, 2)}</g>
+      <g transform="matrix(1.22 0 0 1.22 -7.04 -7.04)"><g class="crescent">
+        <path class="moon" d="${CRESCENT}"/>
+        <circle class="moon-cheek" cx="19.5" cy="39" r="2.2"/>
+        <path class="moon-face" d="M18.6 32.6q1.7 1.5 3.4 0M25.2 36.4q1.7 1.5 3.4 0M21.6 41.8q2.6 2 5.2 .2"/>
+      </g></g>
+    </g></svg>`;
 }
 document.querySelectorAll("[data-sun]").forEach(el => el.outerHTML = sunSVG(+el.dataset.sun));
 
@@ -150,9 +162,11 @@ const sleep = ms => new Promise(r => { const t = setTimeout(() => { sleepers.del
 
 /* Rotate playful "thinking" words while the sun waits, like Claude does */
 const WORDS = (typeof THINKING_WORDS !== "undefined" && THINKING_WORDS.length) ? THINKING_WORDS : ["Thinking"];
+const WORDS_NIGHT = (typeof THINKING_WORDS_NIGHT !== "undefined" && THINKING_WORDS_NIGHT.length) ? THINKING_WORDS_NIGHT : WORDS;
 let lastWord = "";
 function nextWord(){
-  let w; do { w = WORDS[Math.floor(Math.random() * WORDS.length)]; } while (WORDS.length > 1 && w === lastWord);
+  const list = document.documentElement.dataset.mode === "night" ? WORDS_NIGHT : WORDS;
+  let w; do { w = list[Math.floor(Math.random() * list.length)]; } while (list.length > 1 && w === lastWord);
   return (lastWord = w) + "…";
 }
 function startThinking(t){
@@ -390,6 +404,20 @@ if ("IntersectionObserver" in window){
   }), { rootMargin: "-45% 0px -50% 0px" });
   scripted.forEach(t => spy.observe(t));
 }
+
+/* ---------- day / night switch ---------- */
+const modeBtn = document.getElementById("modeSwitch");
+const themeMeta = document.querySelector('meta[name="theme-color"]');
+function setMode(night, animate){
+  const root = document.documentElement;
+  if (animate){ root.classList.add("mode-anim"); clearTimeout(setMode._t); setMode._t = setTimeout(() => root.classList.remove("mode-anim"), 700); }
+  if (night) root.dataset.mode = "night"; else delete root.dataset.mode;
+  modeBtn?.setAttribute("aria-checked", String(night));
+  themeMeta?.setAttribute("content", night ? "#0D1222" : "#FFFFFF");
+  try { localStorage.setItem("mode", night ? "night" : "day"); } catch (e) {}
+}
+modeBtn?.setAttribute("aria-checked", String(document.documentElement.dataset.mode === "night"));
+modeBtn?.addEventListener("click", () => setMode(document.documentElement.dataset.mode !== "night", true));
 
 /* ---------- clicks inside answers ---------- */
 document.addEventListener("click", e => {

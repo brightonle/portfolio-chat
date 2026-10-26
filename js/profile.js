@@ -97,3 +97,10 @@ const THINKING_WORDS = [
   "Beaming", "Sunbathing", "Rising and shining", "Pondering", "Mulling it over",
   "Brewing", "Percolating", "Noodling", "Daydreaming", "Connecting the dots"
 ];
+
+/* ...and the ones the moon uses in night mode */
+const THINKING_WORDS_NIGHT = [
+  "Stargazing", "Moonlighting", "Dreaming", "Counting sheep", "Burning the midnight oil",
+  "Wishing on a star", "Moonwalking", "Orbiting", "Night owling", "Sleeping on it",
+  "Charting the stars", "Howling"
+];
