@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Brighton Le’s Portfolio</title>
+  <meta name="description" content="Brighton Le builds AI agents and data systems. A portfolio you can chat with.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..500&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#hero" aria-label="Back to top"><span data-sun="32"></span><span>Brighton Le’s Portfolio</span></a>
+  <button class="pill" id="getInTouch" type="button">Get in touch</button>
+</header>
+
+<nav class="rail" id="rail" aria-label="Conversation"></nav>
+
+<main id="thread">
+  <section class="hero" id="hero">
+    <span data-sun="72"></span>
+    <h1>Hey, I'm Brighton<span class="wave" role="img" aria-label="waving hand">👋</span>. I build <mark>AI agents and products</mark> that feel <em>reliable</em> and <em>natural</em>.</h1>
+    <p class="lede">Technology Consultant at Ernst &amp; Young and a Northeastern CS + Business grad with a FinTech focus.</p>
+    <div class="hint" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 4v15m0 0-6-6m6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg> scroll to chat</div>
+  </section>
+</main>
+
+<div class="composer-wrap">
+  <div class="composer">
+    <div class="suggest" id="suggest"></div>
+    <form class="box" id="box" autocomplete="off">
+      <label for="q" style="position:absolute;left:-9999px">Ask a question</label>
+      <input id="q" name="q" type="text" placeholder="Ask about my work, projects, stack…" maxlength="240">
+      <button class="send" id="send" type="submit" aria-label="Send" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="js/profile.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "portfolio-chat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Brighton Le's portfolio as a chat. Plain HTML, CSS and JS, no build step.",
+  "scripts": {
+    "dev": "npx --yes live-server --port=5173 --no-browser"
+  }
+}
