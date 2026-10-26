@@ -410,10 +410,14 @@ const modeBtn = document.getElementById("modeSwitch");
 const themeMeta = document.querySelector('meta[name="theme-color"]');
 function setMode(night, animate){
   const root = document.documentElement;
-  if (animate){ root.classList.add("mode-anim"); clearTimeout(setMode._t); setMode._t = setTimeout(() => root.classList.remove("mode-anim"), 700); }
-  if (night) root.dataset.mode = "night"; else delete root.dataset.mode;
-  modeBtn?.setAttribute("aria-checked", String(night));
-  themeMeta?.setAttribute("content", night ? "#0D1222" : "#FFFFFF");
+  const apply = () => {
+    if (night) root.dataset.mode = "night"; else delete root.dataset.mode;
+    modeBtn?.setAttribute("aria-checked", String(night));
+    themeMeta?.setAttribute("content", night ? "#0D1222" : "#FFFFFF");
+  };
+  // One crossfade for the whole page, so every color changes together (no per-element fading lag).
+  if (animate && !reduce && document.startViewTransition) document.startViewTransition(apply);
+  else apply();
   try { localStorage.setItem("mode", night ? "night" : "day"); } catch (e) {}
 }
 modeBtn?.setAttribute("aria-checked", String(document.documentElement.dataset.mode === "night"));

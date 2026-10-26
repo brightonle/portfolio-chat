@@ -33,7 +33,11 @@ a{color:inherit}
   --tile-line:#343C55; --focus-line:#3A4360; --fade-end:rgba(13,18,34,0);
   color-scheme:dark;
 }
-.mode-anim body,.mode-anim body *{transition:background-color .6s ease,color .6s ease,border-color .6s ease,box-shadow .6s ease!important}
+/* day/night crossfade (View Transitions). The switch gets its own layer so its knob visibly slides instead of fading. */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.45s;animation-timing-function:ease}
+.mode-switch{view-transition-name:mode-switch}
+::view-transition-group(mode-switch),::view-transition-new(mode-switch){animation:none}
+::view-transition-old(mode-switch){display:none}
 
 /* ---------- sun mascot ---------- */
 .sun{display:block;flex:none;overflow:visible}
